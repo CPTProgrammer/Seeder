@@ -2,7 +2,8 @@
     "seeder.midnightconfig.title": "Seeder Config",
     "seeder.midnightconfig.locateBiome": "Locate Biome Settings",
     "seeder.midnightconfig.locateBiomeDefaultRadius": "Default Radius for Locating Biomes (in blocks)",
-    "seeder.midnightconfig.locateBiomeDefaultBlockCheckInterval": "Default Block Check Interval for Locating Biomes (in blocks)",
+    "seeder.midnightconfig.locateBiomeDefaultHorizontalBlockCheckInterval": "Default Horizontal Block Check Interval for Locating Biomes (in blocks)",
+    "seeder.midnightconfig.locateBiomeDefaultVerticalBlockCheckInterval": "Default Vertical Block Check Interval for Locating Biomes (in blocks)",
 
     "seeder.command.locate.thread_occupancy": "The current locate thread is occupied. \n§l[ §r%s§l ]§r",
     "seeder.command.stop": "Stop the current task",
