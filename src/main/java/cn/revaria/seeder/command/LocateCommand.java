@@ -63,7 +63,7 @@ public class LocateCommand {
             if (pair == null) {
                 source.sendError(Texts.toText(BIOME_NOT_FOUND_EXCEPTION.create(predicate.asString()).getRawMessage()));
             }
-            sendCoordinates(source, predicate, blockPos, pair, "commands.locate.biome.success", true, stopwatch.elapsed());
+            sendCoordinates(source, predicate, blockPos, pair, "seeder.command.locate.biome.success", true, stopwatch.elapsed());
         }, blockPos, radius, horizontalBlockCheckInterval, verticalBlockCheckInterval, predicate, source.getWorld().getChunkManager().getNoiseConfig().getMultiNoiseSampler(), source.getWorld());
         return 1;
     }
