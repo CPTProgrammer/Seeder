@@ -7,6 +7,8 @@
 
     "seeder.command.locate.thread_occupancy": "The current locate thread is occupied. \n§l[ §r%s§l ]§r",
     "seeder.command.stop": "Stop the current task",
-    "seeder.command.stop.hover": "Click to stop"
+    "seeder.command.stop.hover": "Click to stop",
+    "seeder.command.locate.biome.success": "The biome %s is at %s (%s blocks away)",
+    "seeder.command.locate.structure.success": "The structure %s is at %s (%s blocks away)"
 
 }
