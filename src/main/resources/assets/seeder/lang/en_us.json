@@ -4,11 +4,25 @@
     "seeder.midnightconfig.locateBiomeDefaultRadius": "Default Radius for Locating Biomes (in blocks)",
     "seeder.midnightconfig.locateBiomeDefaultHorizontalBlockCheckInterval": "Default Horizontal Block Check Interval for Locating Biomes (in blocks)",
     "seeder.midnightconfig.locateBiomeDefaultVerticalBlockCheckInterval": "Default Vertical Block Check Interval for Locating Biomes (in blocks)",
+    "seeder.midnightconfig.locateBiomeThreadCount": "Locate Biome Thread Count",
 
+    "seeder.command.config.failure.set": "Failed to config '%s'",
+    "seeder.command.config.failure.get": "Failed to get '%s'",
+    "seeder.command.config.success": "Config '%s' has been changed to %s",
+    "seeder.command.config.current": "Config '%s' current value is %s",
     "seeder.command.locate.thread_occupancy": "The current locate thread is occupied. \n§l[ §r%s§l ]§r",
-    "seeder.command.stop": "Stop the current task",
-    "seeder.command.stop.hover": "Click to stop",
+    "seeder.command.locate.thread_occupancy.stop": "Stop the current task",
+    "seeder.command.locate.thread_occupancy.stop.tooltip": "Click to stop",
     "seeder.command.locate.biome.success": "The biome %s is at %s (%s blocks away)",
-    "seeder.command.locate.structure.success": "The structure %s is at %s (%s blocks away)"
+    "seeder.command.locate.structure.success": "The structure %s is at %s (%s blocks away)",
+    "seeder.command.stop.start": "Trying to stop the current task...",
+    "seeder.command.stop.success": "The current task has been stopped successfully",
+    "seeder.command.stop.failure.timeout": "The current task could not be stopped due to a timeout",
+    "seeder.command.stop.failure.no_thread_pool": "There is no task running",
 
+    "seeder.paginator.title": "Seeder Config",
+    "seeder.paginator.type": "Type: ",
+    "seeder.paginator.default_value": "Default: ",
+    "seeder.paginator.previous_page": "Click to view previous page",
+    "seeder.paginator.next_page": "Click to view next page"
 }

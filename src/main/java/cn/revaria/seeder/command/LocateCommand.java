@@ -30,7 +30,7 @@ public class LocateCommand {
     private static final DynamicCommandExceptionType STRUCTURE_INVALID_EXCEPTION = new DynamicCommandExceptionType(id -> Text.translatable("commands.locate.structure.invalid", id));
     private static final DynamicCommandExceptionType BIOME_NOT_FOUND_EXCEPTION = new DynamicCommandExceptionType(id -> Text.translatable("commands.locate.biome.not_found", id));
     private static final DynamicCommandExceptionType BIOME_THREAD_OCCUPANCY_EXCEPTION = new DynamicCommandExceptionType(id -> Text.translatable("seeder.command.locate.thread_occupancy",
-        Text.translatable("seeder.command.stop").styled(style -> style.withColor(Formatting.DARK_RED).withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/seeder stop locate biome")).withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.translatable("seeder.command.stop.hover"))))
+        Text.translatable("seeder.command.locate.thread_occupancy.stop").styled(style -> style.withColor(Formatting.DARK_RED).withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/seeder stop locate biome")).withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.translatable("seeder.command.locate.thread_occupancy.stop.tooltip"))))
     ));
 
     public static LiteralArgumentBuilder<ServerCommandSource> getCommand(CommandRegistryAccess registryAccess) {

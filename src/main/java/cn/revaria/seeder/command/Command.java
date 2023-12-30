@@ -19,6 +19,8 @@ public class Command {
 
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             dispatcher.register(prefix.then(LocateCommand.getCommand(registryAccess)));
+            dispatcher.register(prefix.then(ConfigCommand.getCommand()));
+            dispatcher.register(prefix.then(StopCommand.getCommand()));
         });
     }
 
