@@ -13,8 +13,8 @@ import net.minecraft.world.biome.source.util.MultiNoiseUtil;
 
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class LocateBiomeTask implements Runnable {
@@ -24,7 +24,7 @@ public class LocateBiomeTask implements Runnable {
     private final int radius;
     private final int horizontalBlockCheckInterval;
     private final int verticalBlockCheckInterval;
-    private final Predicate<RegistryEntry<Biome>> predicate;
+    private final RegistryEntry.Reference<Biome> registryEntry;
     private final MultiNoiseUtil.MultiNoiseSampler noiseSampler;
     private final ServerWorld world;
     private final Callback callback;
@@ -34,21 +34,22 @@ public class LocateBiomeTask implements Runnable {
 
     private final AtomicBoolean stopFlag;
     private final AtomicLong progress;
+    private final AtomicInteger finishedCount;
 
     public LocateBiomeTask(Callback outsideCallback, BlockPos origin, int radius,
                            int horizontalBlockCheckInterval, int verticalBlockCheckInterval,
-                           Predicate<RegistryEntry<Biome>> predicate, MultiNoiseUtil.MultiNoiseSampler noiseSampler,
-                           ServerWorld world, int threadCount, int threadOrdinal, AtomicBoolean stopFlag,
-                           AtomicLong progress
+                           RegistryEntry.Reference<Biome> registryEntry, MultiNoiseUtil.MultiNoiseSampler noiseSampler,
+                           ServerWorld world, BiomeSource biomeSource, int threadCount, int threadOrdinal, AtomicBoolean stopFlag,
+                           AtomicLong progress, AtomicInteger finishedCount
     ) {
-        this.biomeSource = world.getChunkManager().getChunkGenerator().getBiomeSource();
+        this.biomeSource = biomeSource;
         this.callback = outsideCallback;
 
         this.origin = origin;
         this.radius = radius;
         this.horizontalBlockCheckInterval = horizontalBlockCheckInterval;
         this.verticalBlockCheckInterval = verticalBlockCheckInterval;
-        this.predicate = predicate;
+        this.registryEntry = registryEntry;
         this.noiseSampler = noiseSampler;
         this.world = world;
 
@@ -57,12 +58,18 @@ public class LocateBiomeTask implements Runnable {
 
         this.stopFlag = stopFlag;
         this.progress = progress;
+        this.finishedCount = finishedCount;
     }
 
     @Override
     public void run() {
-        Set<RegistryEntry<Biome>> set = this.biomeSource.getBiomes().stream().filter(predicate).collect(Collectors.toUnmodifiableSet());
+        // I don't know why using a predicate here won't match the biome (different reference?)
+        Set<RegistryEntry<Biome>> set = this.biomeSource.getBiomes().stream().filter(biomeRegistryEntry ->
+            ((RegistryEntry.Reference<Biome>) biomeRegistryEntry).registryKey().getValue().toString().equals(this.registryEntry.registryKey().getValue().toString())
+        ).collect(Collectors.toUnmodifiableSet());
         if (set.isEmpty()) {
+            if (stopFlag.get()) return;
+            stopFlag.set(true);
             this.callback.run(null);
             return;
         }
@@ -90,7 +97,10 @@ public class LocateBiomeTask implements Runnable {
             progress.addAndGet(1);
         }
         if (stopFlag.get()) return;
-        this.callback.run(null);
+        if (finishedCount.get() == threadCount - 1) {
+            this.callback.run(null);
+        }
+        finishedCount.addAndGet(1);
         return;
     }
 

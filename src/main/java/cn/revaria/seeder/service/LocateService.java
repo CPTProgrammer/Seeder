@@ -1,6 +1,5 @@
 package cn.revaria.seeder.service;
 
-import cn.revaria.seeder.Seeder;
 import cn.revaria.seeder.config.SeederConfig;
 import cn.revaria.seeder.service.task.LocateBiomeTask;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -9,25 +8,27 @@ import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.source.BiomeSource;
 import net.minecraft.world.biome.source.util.MultiNoiseUtil;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Predicate;
 
 public class LocateService {
 
     private static ExecutorService locateBiomeThreadPool;
     public static final AtomicBoolean locateBiomeStopFlag = new AtomicBoolean();
+    public static final AtomicInteger locateBiomeFinishedCount = new AtomicInteger();
     public static final AtomicLong locateBiomeProgress = new AtomicLong();
     public static final AtomicLong locateBiomeTotal = new AtomicLong();
 
     public static void locateBiome(LocateBiomeTask.Callback callback, BlockPos origin, int radius,
                                    int horizontalBlockCheckInterval, int verticalBlockCheckInterval,
-                                   Predicate<RegistryEntry<Biome>> predicate,
+                                   RegistryEntry.Reference<Biome> registryEntry,
                                    MultiNoiseUtil.MultiNoiseSampler noiseSampler,
                                    ServerWorld world
     ) {
@@ -35,14 +36,15 @@ public class LocateService {
         locateBiomeThreadPool = Executors.newFixedThreadPool(threadCount);
 
         locateBiomeStopFlag.set(false);
+        locateBiomeFinishedCount.set(0);
         locateBiomeProgress.set(0);
         long length = (Math.floorDiv(radius, horizontalBlockCheckInterval) * 2L + 1);
         locateBiomeTotal.set(length * length);
-        Seeder.LOGGER.debug(String.valueOf(locateBiomeTotal.get()));
 
         try {
+            BiomeSource biomeSource = world.getChunkManager().getChunkGenerator().getBiomeSource();
             for (int i = 0; i < threadCount; i++) {
-                locateBiomeThreadPool.submit(new LocateBiomeTask(callback, origin, radius, horizontalBlockCheckInterval, verticalBlockCheckInterval, predicate, noiseSampler, world, threadCount, i, locateBiomeStopFlag, locateBiomeProgress));
+                locateBiomeThreadPool.submit(new LocateBiomeTask(callback, origin, radius, horizontalBlockCheckInterval, verticalBlockCheckInterval, registryEntry, noiseSampler, world, biomeSource, threadCount, i, locateBiomeStopFlag, locateBiomeProgress, locateBiomeFinishedCount));
             }
         } finally {
             locateBiomeThreadPool.shutdown();
@@ -66,6 +68,17 @@ public class LocateService {
         } catch (InterruptedException e) {
             throw TimeoutException.create();
         }
+    }
+
+    public static void forceStopLocateBiomeTask() {
+        if (locateBiomeThreadPool == null) {
+            return;
+        }
+        if (locateBiomeThreadPool.isTerminated()) {
+            return;
+        }
+        locateBiomeStopFlag.set(true);
+        locateBiomeThreadPool.shutdownNow();
     }
 
     public static boolean canLocateBiomeTask() {
