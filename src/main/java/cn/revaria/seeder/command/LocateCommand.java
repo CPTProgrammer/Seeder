@@ -10,15 +10,18 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.datafixers.util.Either;
+import com.mojang.datafixers.util.Pair;
 import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.command.argument.RegistryEntryArgumentType;
 import net.minecraft.command.argument.RegistryEntryPredicateArgumentType;
+import net.minecraft.command.argument.RegistryPredicateArgumentType;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.entry.RegistryEntryList;
 import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.ClickEvent;
 import net.minecraft.text.HoverEvent;
 import net.minecraft.text.Text;
@@ -27,6 +30,7 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
+import net.minecraft.world.gen.structure.Structure;
 
 import java.util.Optional;
 
@@ -37,6 +41,7 @@ import static net.minecraft.server.command.LocateCommand.sendCoordinates;
 
 public class LocateCommand {
     private static final DynamicCommandExceptionType STRUCTURE_INVALID_EXCEPTION = new DynamicCommandExceptionType(id -> Text.translatable("commands.locate.structure.invalid", id));
+    private static final DynamicCommandExceptionType STRUCTURE_NOT_FOUND_EXCEPTION = new DynamicCommandExceptionType(id -> Text.translatable("commands.locate.structure.not_found", id));
     private static final DynamicCommandExceptionType BIOME_NOT_FOUND_EXCEPTION = new DynamicCommandExceptionType(id -> Text.translatable("commands.locate.biome.not_found", id));
     private static final SimpleCommandExceptionType BIOME_THREAD_OCCUPANCY_EXCEPTION = new SimpleCommandExceptionType(Text.translatable("seeder.command.locate.thread_occupancy",
         Text.translatable("seeder.command.locate.thread_occupancy.stop").styled(style -> style.withColor(Formatting.DARK_RED).withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/seeder stop locate biome")).withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.translatable("seeder.command.locate.thread_occupancy.stop.tooltip"))))
@@ -56,6 +61,14 @@ public class LocateCommand {
                         .executes(context -> executeLocateBiome(context.getSource(), getRegistryEntry(context, "biome", RegistryKeys.BIOME),
                             (context.getArgument("radius", DefaultOrIntegerArgument.class).isDefault ? SeederConfig.locateBiomeDefaultRadius : context.getArgument("radius", DefaultOrIntegerArgument.class).value))))
                     .executes(context -> executeLocateBiome(context.getSource(), getRegistryEntry(context, "biome", RegistryKeys.BIOME)))
+            )
+        ).then(
+            literal("structure").then(
+                argument("structure", RegistryPredicateArgumentType.registryPredicate(RegistryKeys.STRUCTURE))
+                    .then(argument("radius", DefaultOrIntegerArgumentType.integer(0)).suggests(DefaultOrIntegerArgumentType.SUGGESTION_PROVIDER)
+                        .executes(context -> executeLocateStructure(context.getSource(), RegistryPredicateArgumentType.getPredicate(context, "structure", RegistryKeys.STRUCTURE, STRUCTURE_INVALID_EXCEPTION),
+                            (context.getArgument("radius", DefaultOrIntegerArgument.class).isDefault ? SeederConfig.locateBiomeDefaultRadius : context.getArgument("radius", DefaultOrIntegerArgument.class).value))))
+                    .executes(context -> executeLocateStructure(context.getSource(), RegistryPredicateArgumentType.getPredicate(context, "structure", RegistryKeys.STRUCTURE, STRUCTURE_INVALID_EXCEPTION)))
             )
         );
     }
@@ -83,6 +96,28 @@ public class LocateCommand {
 
     private static int executeLocateBiome(ServerCommandSource source, RegistryEntry.Reference<Biome> registryEntry, int radius) throws CommandSyntaxException {
         return executeLocateBiome(source, registryEntry, radius, SeederConfig.locateBiomeDefaultHorizontalBlockCheckInterval, SeederConfig.locateBiomeDefaultVerticalBlockCheckInterval);
+    }
+
+    private static int executeLocateStructure(ServerCommandSource source, RegistryPredicateArgumentType.RegistryPredicate<Structure> predicate, int radius) throws CommandSyntaxException {
+        Registry<Structure> registry = source.getWorld().getRegistryManager().get(RegistryKeys.STRUCTURE);
+        RegistryEntryList registryEntryList = getStructureListForPredicate(predicate, registry).orElseThrow(() -> STRUCTURE_INVALID_EXCEPTION.create(predicate.asString()));
+        BlockPos blockPos = BlockPos.ofFloored(source.getPosition());
+        ServerWorld serverWorld = source.getWorld();
+        Stopwatch stopwatch = Stopwatch.createStarted(Util.TICKER);
+        Pair<BlockPos, RegistryEntry<Structure>> pair = serverWorld.getChunkManager().getChunkGenerator().locateStructure(serverWorld, registryEntryList, blockPos, radius, false);
+        stopwatch.stop();
+        if (pair == null) {
+            throw STRUCTURE_NOT_FOUND_EXCEPTION.create(predicate.asString());
+        }
+        return sendCoordinates(source, predicate, blockPos, pair, "seeder.command.locate.structure.success", false, stopwatch.elapsed());
+    }
+
+    private static int executeLocateStructure(ServerCommandSource source, RegistryPredicateArgumentType.RegistryPredicate<Structure> predicate) throws CommandSyntaxException {
+        return executeLocateStructure(source, predicate, SeederConfig.locateStructureDefaultRadius);
+    }
+
+    private static Optional<? extends RegistryEntryList.ListBacked<Structure>> getStructureListForPredicate(RegistryPredicateArgumentType.RegistryPredicate<Structure> predicate, Registry<Structure> structureRegistry) {
+        return predicate.getKey().map(key -> structureRegistry.getEntry((RegistryKey<Structure>) key).map(RegistryEntryList::of), structureRegistry::getEntryList);
     }
 
     private record EntryBased<T>(

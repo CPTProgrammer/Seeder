@@ -5,6 +5,8 @@
     "seeder.midnightconfig.locateBiomeDefaultHorizontalBlockCheckInterval": "Default Horizontal Block Check Interval for Locating Biomes (in blocks)",
     "seeder.midnightconfig.locateBiomeDefaultVerticalBlockCheckInterval": "Default Vertical Block Check Interval for Locating Biomes (in blocks)",
     "seeder.midnightconfig.locateBiomeThreadCount": "Locate Biome Thread Count",
+    "seeder.midnightconfig.locateStructure": "Locate Structure Settings",
+    "seeder.midnightconfig.locateStructureDefaultRadius": "Default Radius for Locating Structures (in chunks)",
 
     "seeder.command.config.failure.set": "Failed to config '%s'",
     "seeder.command.config.failure.get": "Failed to get '%s'",

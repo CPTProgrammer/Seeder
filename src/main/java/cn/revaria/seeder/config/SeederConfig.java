@@ -19,4 +19,11 @@ public class SeederConfig extends MidnightConfig {
 
     @Entry(category = LOCATE_CATEGORY, min = 1, max = 128)
     public static int locateBiomeThreadCount = 4;
+
+
+    @Comment(category = LOCATE_CATEGORY, centered = true)
+    public static Comment locateStructure;
+
+    @Entry(category = LOCATE_CATEGORY, min = 0)
+    public static int locateStructureDefaultRadius = 100;
 }
