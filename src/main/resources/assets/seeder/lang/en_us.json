@@ -26,5 +26,7 @@
     "seeder.paginator.type": "Type: ",
     "seeder.paginator.default_value": "Default: ",
     "seeder.paginator.previous_page": "Click to view previous page",
-    "seeder.paginator.next_page": "Click to view next page"
+    "seeder.paginator.next_page": "Click to view next page",
+
+    "seeder.gui.title.button": "Seeder"
 }
